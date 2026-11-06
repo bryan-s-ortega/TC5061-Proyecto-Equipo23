@@ -23,6 +23,7 @@ dependencies = [
     "mlflow==3.16.1",
     "pandas>=3.0.6", # Data Processing
     "pyarrow>=18.0", # Parquet output
+    "pydantic>=2,<3",
     "python-dotenv>=1.2.4", # Env variables
     "scikit-learn>=1.9.1", # ML models
     "tqdm>=4.70.1", # Progress Bars
