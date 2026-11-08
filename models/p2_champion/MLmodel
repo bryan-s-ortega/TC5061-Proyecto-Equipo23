@@ -1,0 +1,39 @@
+artifact_path: mlflow-artifacts:/67074ae5f9aa4313a1fee390557edd17/models/m-f5e368ba2fb94a4fbf376a1cd6df2aa9/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.13.17
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.9.1
+    skops_trusted_types: null
+is_signature_from_type_hint: false
+mlflow_version: 3.16.1
+model_id: m-f5e368ba2fb94a4fbf376a1cd6df2aa9
+model_size_bytes: 2427
+model_uuid: m-f5e368ba2fb94a4fbf376a1cd6df2aa9
+prompts: null
+run_id: 55225195968642979a681bf751d9e2f8
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  serving_input_path: serving_input_example.json
+  type: dataframe
+signature:
+  inputs: '[{"type": "double", "name": "departures_prev_30m", "required": true}, {"type":
+    "double", "name": "arrivals_prev_30m", "required": true}, {"type": "double", "name":
+    "departures_prev_2h", "required": true}, {"type": "double", "name": "arrivals_prev_2h",
+    "required": true}, {"type": "long", "name": "hour", "required": true}, {"type":
+    "long", "name": "minute", "required": true}, {"type": "long", "name": "day_of_week",
+    "required": true}, {"type": "long", "name": "capacity", "required": true}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "object", "shape": [-1]}}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2026-11-08 19:20:13.507214'

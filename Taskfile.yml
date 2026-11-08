@@ -133,3 +133,24 @@ tasks:
       - pandoc references/reporte_entrega2_experimentos_mlflow.md -s --css references/pdf_style.css --resource-path=references:reports/evidence:reports/figures:. --embed-resources -o references/reporte_entrega2_experimentos_mlflow.html --metadata title="Reporte de Experimentación, Reproducibilidad y Model Registry — MiBici"
       - google-chrome --headless --disable-gpu --no-sandbox --no-pdf-header-footer --print-to-pdf="TC5061_Entrega2_Reproducibilidad_Equipo23.pdf" "file://{{.USER_WORKING_DIR}}/references/reporte_entrega2_experimentos_mlflow.html"
 
+  api:
+    desc: Run FastAPI prediction API service in local development mode
+    cmds:
+      - uv run uvicorn mibici.api.main:app --reload --host 0.0.0.0 --port 8000
+
+  api:extract-model:
+    desc: Extract and package champion model from MLflow/DagsHub Model Registry
+    cmds:
+      - uv run python -m mibici.api.extract_model
+
+  api:container:build:
+    desc: Build container image using Containerfile and uv.lock
+    cmds:
+      - docker build -t mibici-p2-api:latest -f Containerfile .
+
+  api:container:run:
+    desc: Run containerized FastAPI service on port 8000
+    cmds:
+      - docker run --rm -p 8000:8000 mibici-p2-api:latest
+
+

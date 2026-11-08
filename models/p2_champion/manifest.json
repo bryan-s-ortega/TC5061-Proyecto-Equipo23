@@ -1,0 +1,23 @@
+{
+  "features": [
+    "departures_prev_30m",
+    "arrivals_prev_30m",
+    "departures_prev_2h",
+    "arrivals_prev_2h",
+    "hour",
+    "minute",
+    "day_of_week",
+    "capacity"
+  ],
+  "labels": [
+    "sin_presion_neta_elevada",
+    "presion_sin_bicicletas",
+    "presion_sin_anclajes"
+  ],
+  "source": "mlflow_registry",
+  "model_name": "MiBici_Equipo23_P2_Presion_Proxy_Academica",
+  "alias": "champion",
+  "version": "1",
+  "run_id": "55225195968642979a681bf751d9e2f8",
+  "tracking_uri": "https://dagshub.com/bryan-s-ortega/TC5061-Proyecto-Equipo23.mlflow"
+}

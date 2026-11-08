@@ -42,21 +42,47 @@ class ModelService:
 
     def load_model(self) -> None:
         """Intenta cargar el modelo desde MLflow, archivo local o genera fallback."""
-        # 1. Intentar cargar desde ruta local especificada en MODEL_PATH
+        # 1. Intentar cargar desde ruta local especificada en MODEL_PATH (directorio MLmodel o archivo)
         local_path = os.getenv("MODEL_PATH")
-        if local_path and Path(local_path).is_file():
+        if local_path and Path(local_path).exists():
+            path_obj = Path(local_path)
             try:
-                import joblib
+                if path_obj.is_dir() and (path_obj / "MLmodel").is_file():
+                    import mlflow.sklearn
 
-                self.model = joblib.load(local_path)
-                self.model_type = type(self.model).__name__
-                self._is_fallback = False
-                logger.info("Modelo P2 cargado exitosamente desde archivo local: {}", local_path)
-                return
+                    self.model = mlflow.sklearn.load_model(str(path_obj))
+                    self.model_type = f"{type(self.model).__name__} (MLflow Extracted Artifact)"
+                    self._is_fallback = False
+                    logger.info("Modelo P2 cargado desde paquete MLflow local: {}", local_path)
+                    return
+                if path_obj.is_file():
+                    import joblib
+
+                    self.model = joblib.load(local_path)
+                    self.model_type = type(self.model).__name__
+                    self._is_fallback = False
+                    logger.info(
+                        "Modelo P2 cargado exitosamente desde archivo local: {}", local_path
+                    )
+                    return
             except (OSError, ValueError, TypeError) as e:
                 logger.warning("Fallo al cargar modelo local {}: {}", local_path, e)
 
-        # 2. Intentar cargar desde archivo estándar en directorio models/
+        # 2. Intentar cargar desde paquete containerizado en models/p2_champion
+        champion_dir = MODELS_DIR / "p2_champion"
+        if champion_dir.is_dir() and (champion_dir / "MLmodel").is_file():
+            try:
+                import mlflow.sklearn
+
+                self.model = mlflow.sklearn.load_model(str(champion_dir))
+                self.model_type = f"{type(self.model).__name__} (Containerized MLflow Champion)"
+                self._is_fallback = False
+                logger.info("Modelo P2 cargado desde paquete empaquetado: {}", champion_dir)
+                return
+            except (OSError, ValueError, TypeError) as e:
+                logger.warning("Fallo al cargar modelo empaquetado de {}: {}", champion_dir, e)
+
+        # 3. Intentar cargar desde archivo estándar en directorio models/
         default_local = MODELS_DIR / "p2_decision_tree.joblib"
         if default_local.is_file():
             try:
@@ -70,7 +96,7 @@ class ModelService:
             except (OSError, ValueError, TypeError) as e:
                 logger.warning("Fallo al cargar modelo de {}: {}", default_local, e)
 
-        # 3. Intentar cargar desde MLflow Model Registry
+        # 4. Intentar cargar desde MLflow Model Registry directo
         try:
             import mlflow.sklearn
 
@@ -87,7 +113,7 @@ class ModelService:
                 e,
             )
 
-        # 4. Fallback determinista en memoria para entornos aislados / pruebas
+        # 5. Fallback determinista en memoria para entornos aislados / pruebas
         logger.info("Inicializando modelo P2 fallback de demostración académica...")
         self.model = self._create_fallback_model()
         self.model_type = f"{type(self.model).__name__} (In-Memory Fallback)"
