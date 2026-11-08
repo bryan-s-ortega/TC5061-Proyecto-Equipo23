@@ -6,6 +6,19 @@
 
 Proyecto de MLOps con datos del sistema de bicicleta pública del Área Metropolitana de Guadalajara, MiBici.
 
+## API REST de P2: guía de despliegue en preparación
+
+La [guía del servicio P2](docs/api_p2.md) describe su propósito, la propuesta de
+inferencia en tiempo real, el contrato de entrada/salida y los pasos previstos
+para construir, ejecutar y consultar el contenedor con Podman. El
+[JSON de ejemplo](examples/p2_prediction_request.json) utiliza las ocho variables
+definidas en el contrato del equipo.
+
+**Estado:** documentación preliminar para completar con la integración de la API.
+En la base revisada (`707f961`) todavía falta `mibici/api/main.py`. La construcción
+del contenedor, la respuesta real y su captura están pendientes de verificación;
+los comandos de la guía no se presentan como una ejecución exitosa ya realizada.
+
 ## Actividad 7: pruebas, validación de datos y seguridad
 
 La [guía de ejecución y evidencias](reports/evidence/actividad7/README.md) documenta
