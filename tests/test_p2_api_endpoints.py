@@ -30,8 +30,26 @@ def test_root_endpoint():
     data = response.json()
     assert "title" in data
     assert data["documentation"] == "/docs"
+    assert data["interactive_ui"] == "/ui"
     assert data["health"] == "/health"
     assert data["status"] == "online"
+
+
+def test_ui_endpoint():
+    """El endpoint /ui debe devolver la interfaz web interactiva en HTML."""
+    response = client.get("/ui")
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "MiBici — Inferencia de Presión en Estaciones" in response.text
+    assert "predict-form" in response.text
+
+
+def test_root_browser_negotiation():
+    """Al solicitar text/html en raíz se entrega la interfaz web."""
+    response = client.get("/", headers={"accept": "text/html"})
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "MiBici — Inferencia de Presión en Estaciones" in response.text
 
 
 def test_health_endpoint():

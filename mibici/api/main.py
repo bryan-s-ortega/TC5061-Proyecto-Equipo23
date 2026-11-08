@@ -5,7 +5,8 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.responses import HTMLResponse
 from loguru import logger
 
 from mibici.api.model import ModelService, get_model_service, model_service
@@ -17,6 +18,7 @@ from mibici.api.schemas import (
     P2PredictionRequest,
     P2PredictionResponse,
 )
+from mibici.api.ui import get_ui_html
 
 
 @asynccontextmanager
@@ -49,20 +51,35 @@ app = FastAPI(
 
 @app.get(
     "/",
-    summary="Información general de la API",
+    summary="Información general de la API o interfaz interactiva",
     tags=["General"],
 )
-async def root() -> dict[str, Any]:
-    """Retorna información general de la API, enlaces a la documentación y estado del modelo."""
+async def root(request: Request) -> Any:
+    """Retorna información general de la API en JSON o la interfaz web si se consulta desde navegador."""
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept and "application/json" not in accept:
+        return HTMLResponse(content=get_ui_html())
     return {
         "title": "MiBici — API de Predicción de Presión en Estaciones (P2)",
         "version": "1.0.0",
         "documentation": "/docs",
+        "interactive_ui": "/ui",
         "health": "/health",
         "model_name": model_service.model_name,
         "model_version": model_service.model_version,
         "status": "online",
     }
+
+
+@app.get(
+    "/ui",
+    response_class=HTMLResponse,
+    summary="Interfaz gráfica interactiva para predicción",
+    tags=["General"],
+)
+async def ui() -> HTMLResponse:
+    """Sirve la interfaz web moderna para simulación e inferencia visual del modelo P2."""
+    return HTMLResponse(content=get_ui_html())
 
 
 @app.get(
