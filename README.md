@@ -423,10 +423,17 @@ uv run python -m mibici.api.extract_model
 
 ### 2. Ejecución Local de la API
 
+Puedes iniciar la API con cualquiera de las siguientes opciones:
+
 ```bash
-task api
-# o directamente:
+# Opción directa (recomendada, sin dependencias externas):
 uv run uvicorn mibici.api.main:app --reload --host 0.0.0.0 --port 8000
+
+# Opción mediante MLproject (requiere --env-manager local):
+uv run mlflow run . --env-manager local -e serve
+
+# Opción con task (requiere tener instalado go-task en el sistema: brew install go-task):
+task api
 ```
 La documentación interactiva OpenAPI/Swagger queda disponible en `http://localhost:8000/docs`.
 
