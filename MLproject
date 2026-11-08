@@ -1,8 +1,6 @@
 name: mibici-equipo23
 
-# Con --env-manager local se utiliza el entorno fijado por uv.lock.
-# python_env permite también ejecutar el proyecto con el gestor virtual de MLflow.
-python_env: python_env.yaml
+# Se ejecuta utilizando el entorno virtual gestionado por uv (--env-manager local).
 
 entry_points:
   ingest:
@@ -28,3 +26,8 @@ entry_points:
       seed: {type: int, default: 42}
       sample_fraction: {type: float, default: 0.05}
     command: "python -m mibici.project_cli search --question {question} --seed {seed} --sample-fraction {sample_fraction}"
+  serve:
+    parameters:
+      host: {type: str, default: "0.0.0.0"}
+      port: {type: int, default: 8000}
+    command: "uvicorn mibici.api.main:app --host {host} --port {port}"

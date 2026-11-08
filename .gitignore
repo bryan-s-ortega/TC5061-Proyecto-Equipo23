@@ -10,6 +10,7 @@ mlruns.db
 # Models
 *.pkl
 *.joblib
+!models/p2_champion/model.pkl
 
 # Mac OS-specific storage files
 .DS_Store

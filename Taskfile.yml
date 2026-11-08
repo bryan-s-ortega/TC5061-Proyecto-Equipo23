@@ -3,7 +3,6 @@ version: '3'
 vars:
   PROJECT_NAME: mibici
   PYTHON_VERSION: '3.13'
-  BUCKET_NAME: gs://mibici-mlops-project
 
 tasks:
   default:
@@ -12,22 +11,14 @@ tasks:
     cmds:
       - task --list
 
-  requirements:
-    desc: Install Python dependencies with uv
+  sync:
+    desc: Sync dependencies using uv.lock
+    aliases: [requirements]
     cmds:
       - uv sync
 
-  create-env:
-    desc: Set up Python virtual environment
-    aliases: [create_environment]
-    cmds:
-      - uv venv --python {{.PYTHON_VERSION}}
-      - echo ">>> New uv virtual environment created. Activate with:"
-      - echo ">>> Windows:\ .venv\Scripts\activate"
-      - echo ">>> Unix/macOS:\ source ./.venv/bin/activate"
-
   clean:
-    desc: Delete all compiled Python files and cache
+    desc: Delete all compiled Python cache files
     cmds:
       - find . -type f -name "*.py[co]" -delete
       - find . -type d -name "__pycache__" -delete
@@ -50,86 +41,48 @@ tasks:
       - uv run pytest tests
 
   deepchecks:
-    desc: Validate P1 data using the separate Python 3.12 DeepChecks environment (Unix/macOS)
+    desc: Validate P1 data using DeepChecks
     preconditions:
       - sh: test -x .venv-deepchecks/bin/python
         msg: Prepare .venv-deepchecks with requirements-deepchecks.txt as documented in README.
       - sh: test -f data/processed/p1_demanda_diaria.csv
-        msg: Prepare the real P1 dataset as documented in README before running DeepChecks.
+        msg: Prepare P1 dataset before running DeepChecks.
     cmds:
       - .venv-deepchecks/bin/python -m mibici.validation.deepchecks_validation
 
-  security:bandit:
-    desc: Run Bandit SAST static security analysis on codebase
+  security:
+    desc: Run all basic security checks (Bandit SAST and pip-audit SCA)
+    aliases: [security:check]
     cmds:
       - uv run bandit -r mibici -ll
-
-  security:audit:
-    desc: Run pip-audit software composition analysis (SCA) on dependencies
-    cmds:
       - uv run pip-audit
 
-  security:check:
-    desc: Run all basic security checks (SAST code analysis and SCA dependencies)
-    cmds:
-      - task: security:bandit
-      - task: security:audit
-
-  security:report:
-    desc: Generate formatted security audit evidence reports in reports/security/
-    cmds:
-      - mkdir -p reports/security
-      - uv run bandit -r mibici -f txt -o reports/security/bandit_report.txt || true
-      - uv run bandit -r mibici -f json -o reports/security/bandit_report.json || true
-      - uv run pip-audit -f columns -o reports/security/pip_audit_report.txt || true
-      - uv run pip-audit -f json -o reports/security/pip_audit_report.json || true
-
-  data:
-    desc: Make dataset using DVC pipeline
-    deps: [requirements]
-    cmds:
-      - uv run dvc repro --force dataset
-
-  dvc:push:
-    desc: Push DVC tracked data to GCS remote storage
-    cmds:
-      - uv run dvc push
-
   dvc:pull:
-    desc: Pull DVC tracked data from GCS remote storage
+    desc: Pull data from remote GCS storage
     cmds:
       - uv run dvc pull
 
-  grant-access:
-    desc: 'Grant GCS bucket access to a colleague (Usage: task grant-access EMAIL=colleague@gmail.com [ROLE=roles/storage.objectUser])'
-    vars:
-      EMAIL: '{{.EMAIL | default .CLI_ARGS}}'
-      ROLE: '{{.ROLE | default "roles/storage.objectUser"}}'
-    preconditions:
-      - sh: 'test -n "{{.EMAIL}}"'
-        msg: 'Please provide a colleague email. Example: task grant-access EMAIL=colleague@gmail.com or task grant-access -- colleague@gmail.com'
+  dvc:push:
+    desc: Push data to remote GCS storage
     cmds:
-      - gcloud storage buckets add-iam-policy-binding {{.BUCKET_NAME}} --member="user:{{.EMAIL}}" --role="{{.ROLE}}"
+      - uv run dvc push
 
-  hooks:install:
-    desc: Install git pre-commit hooks
+  api:
+    desc: Run FastAPI prediction API service in local development mode
     cmds:
-      - uv run pre-commit install
+      - uv run uvicorn mibici.api.main:app --reload --host 0.0.0.0 --port 8000
 
-  hooks:run:
-    desc: Run pre-commit hooks manually on all files
+  api:extract-model:
+    desc: Extract and package champion model from MLflow/DagsHub Model Registry
     cmds:
-      - uv run pre-commit run --all-files
+      - uv run python -m mibici.api.extract_model
 
-  pdf:
-    desc: Build formal PDF deliverable from markdown proposal (Entrega 1)
+  api:container:build:
+    desc: Build container image using Containerfile and uv.lock
     cmds:
-      - pandoc references/propuesta_entrega.md -s --css references/pdf_style.css --resource-path=references:. --embed-resources -o references/propuesta_entrega.html --metadata title="Propuesta de proyecto MiBici — Equipo 23"
-      - google-chrome --headless --disable-gpu --no-sandbox --no-pdf-header-footer --print-to-pdf="TC5061_Propuesta_Proyecto_Equipo23.pdf" "file://{{.USER_WORKING_DIR}}/references/propuesta_entrega.html"
+      - docker build -t mibici-p2-api:latest -f Containerfile .
 
-  pdf:entrega2:
-    desc: Build formal PDF deliverable for Reproducibilidad, MLflow Projects y Model Registry (Entrega 2)
+  api:container:run:
+    desc: Run containerized FastAPI service on port 8000
     cmds:
-      - pandoc references/reporte_entrega2_experimentos_mlflow.md -s --css references/pdf_style.css --resource-path=references:reports/evidence:reports/figures:. --embed-resources -o references/reporte_entrega2_experimentos_mlflow.html --metadata title="Reporte de Experimentación, Reproducibilidad y Model Registry — MiBici"
-      - google-chrome --headless --disable-gpu --no-sandbox --no-pdf-header-footer --print-to-pdf="TC5061_Entrega2_Reproducibilidad_Equipo23.pdf" "file://{{.USER_WORKING_DIR}}/references/reporte_entrega2_experimentos_mlflow.html"
-
+      - docker run --rm -p 8000:8000 mibici-p2-api:latest

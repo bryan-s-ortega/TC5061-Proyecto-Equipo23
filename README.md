@@ -405,3 +405,77 @@ corridas anidadas (*nested runs*). P1 evalúa el conjunto de prueba una sola vez
 para el ganador seleccionado por MAE de validación. P2 optimiza Balanced Accuracy
 con umbral mínimo de recall. P3 selecciona K-Means con $k=4$ grupos enriquecidos
 con 9 variables funcionales y operativas de flujo neto y perfiles horarios.
+
+## Despliegue de Inferencia con FastAPI y Contenedores (P2)
+
+Se implementó un servicio REST con FastAPI para exponer el modelo ganador de clasificación de **presión en estaciones (P2)** (`MiBici_Equipo23_P2_Presion_Proxy_Academica@champion`), empaquetado en un contenedor reproducible gestionado con `uv.lock`.
+
+### 1. Extracción del Modelo Champion desde DagsHub Model Registry
+
+El modelo ganador se encuentra registrado centralmente en DagsHub:
+
+```bash
+# Descargar o actualizar el modelo champion hacia models/p2_champion/
+task api:extract-model
+# o directamente:
+uv run python -m mibici.api.extract_model
+```
+
+### 2. Ejecución Local de la API
+
+Puedes iniciar la API con cualquiera de las siguientes opciones:
+
+```bash
+# Opción directa (recomendada, sin dependencias externas):
+uv run uvicorn mibici.api.main:app --reload --host 0.0.0.0 --port 8000
+
+# Opción mediante MLproject (requiere --env-manager local):
+uv run mlflow run . --env-manager local -e serve
+
+# Opción con task (requiere tener instalado go-task en el sistema: brew install go-task):
+task api
+```
+La documentación interactiva OpenAPI/Swagger queda disponible en `http://localhost:8000/docs`.
+
+### 3. Construcción y Ejecución del Contenedor Autónomo
+
+El `Containerfile` instala las dependencias bloqueadas en `uv.lock` y empaqueta el artefacto de MLflow del modelo, permitiendo su despliegue reproducible en cualquier entorno sin dependencias externas:
+
+```bash
+# Construir la imagen del contenedor
+task api:container:build
+# o directamente:
+docker build -t mibici-p2-api:latest -f Containerfile .
+
+# Ejecutar el contenedor
+task api:container:run
+# o directamente:
+docker run --rm -p 8000:8000 mibici-p2-api:latest
+```
+
+### 4. Prueba de Inferencia (`POST /predict`)
+
+```bash
+curl -X POST http://localhost:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "departures_prev_30m": 2,
+    "arrivals_prev_30m": 1,
+    "departures_prev_2h": 8,
+    "arrivals_prev_2h": 6,
+    "hour": 10,
+    "minute": 30,
+    "day_of_week": 2,
+    "capacity": 15
+  }'
+```
+
+Respuesta esperada:
+```json
+{
+  "prediction": "sin_presion_neta_elevada",
+  "model_name": "MiBici_Equipo23_P2_Presion_Proxy_Academica",
+  "model_version": "champion"
+}
+```
+
