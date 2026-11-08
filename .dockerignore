@@ -1,0 +1,16 @@
+﻿.git
+.venv/
+.venv-deepchecks/
+.venv*/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+data/
+reports/
+notebooks/
+mlruns/
+mlflow.db
+google-cloud-sdk/
+GoogleCloudSDKInstaller.exe
+*.log
