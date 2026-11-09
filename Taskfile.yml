@@ -3,6 +3,7 @@ version: '3'
 vars:
   PROJECT_NAME: mibici
   PYTHON_VERSION: '3.13'
+  BUCKET_NAME: gs://mibici-mlops-project
 
 tasks:
   default:
@@ -86,3 +87,70 @@ tasks:
     desc: Run containerized FastAPI service on port 8000
     cmds:
       - docker run --rm -p 8000:8000 mibici-p2-api:latest
+
+  create-env:
+    desc: Set up Python virtual environment
+    aliases: [create_environment]
+    cmds:
+      - uv venv --python {{.PYTHON_VERSION}}
+      - echo ">>> New uv virtual environment created. Activate with:"
+      - echo ">>> Windows:\ .venv\Scripts\activate"
+      - echo ">>> Unix/macOS:\ source ./.venv/bin/activate"
+
+  security:bandit:
+    desc: Run Bandit SAST static security analysis on codebase
+    cmds:
+      - uv run bandit -r mibici -ll
+
+  security:audit:
+    desc: Run pip-audit software composition analysis (SCA) on dependencies
+    cmds:
+      - uv run pip-audit
+
+  security:report:
+    desc: Generate formatted security audit evidence reports in reports/security/
+    cmds:
+      - mkdir -p reports/security
+      - uv run bandit -r mibici -f txt -o reports/security/bandit_report.txt || true
+      - uv run bandit -r mibici -f json -o reports/security/bandit_report.json || true
+      - uv run pip-audit -f columns -o reports/security/pip_audit_report.txt || true
+      - uv run pip-audit -f json -o reports/security/pip_audit_report.json || true
+
+  data:
+    desc: Make dataset using DVC pipeline
+    deps: [requirements]
+    cmds:
+      - uv run dvc repro --force dataset
+
+  grant-access:
+    desc: 'Grant GCS bucket access to a colleague (Usage: task grant-access EMAIL=colleague@gmail.com [ROLE=roles/storage.objectUser])'
+    vars:
+      EMAIL: '{{.EMAIL | default .CLI_ARGS}}'
+      ROLE: '{{.ROLE | default "roles/storage.objectUser"}}'
+    preconditions:
+      - sh: 'test -n "{{.EMAIL}}"'
+        msg: 'Please provide a colleague email. Example: task grant-access EMAIL=colleague@gmail.com or task grant-access -- colleague@gmail.com'
+    cmds:
+      - gcloud storage buckets add-iam-policy-binding {{.BUCKET_NAME}} --member="user:{{.EMAIL}}" --role="{{.ROLE}}"
+
+  hooks:install:
+    desc: Install git pre-commit hooks
+    cmds:
+      - uv run pre-commit install
+
+  hooks:run:
+    desc: Run pre-commit hooks manually on all files
+    cmds:
+      - uv run pre-commit run --all-files
+
+  pdf:
+    desc: Build formal PDF deliverable from markdown proposal (Entrega 1)
+    cmds:
+      - pandoc references/propuesta_entrega.md -s --css references/pdf_style.css --resource-path=references:. --embed-resources -o references/propuesta_entrega.html --metadata title="Propuesta de proyecto MiBici — Equipo 23"
+      - google-chrome --headless --disable-gpu --no-sandbox --no-pdf-header-footer --print-to-pdf="TC5061_Propuesta_Proyecto_Equipo23.pdf" "file://{{.USER_WORKING_DIR}}/references/propuesta_entrega.html"
+
+  pdf:entrega2:
+    desc: Build formal PDF deliverable for Reproducibilidad, MLflow Projects y Model Registry (Entrega 2)
+    cmds:
+      - pandoc references/reporte_entrega2_experimentos_mlflow.md -s --css references/pdf_style.css --resource-path=references:reports/evidence:reports/figures:. --embed-resources -o references/reporte_entrega2_experimentos_mlflow.html --metadata title="Reporte de Experimentación, Reproducibilidad y Model Registry — MiBici"
+      - google-chrome --headless --disable-gpu --no-sandbox --no-pdf-header-footer --print-to-pdf="TC5061_Entrega2_Reproducibilidad_Equipo23.pdf" "file://{{.USER_WORKING_DIR}}/references/reporte_entrega2_experimentos_mlflow.html"
