@@ -16,7 +16,9 @@ classifiers = [
     "License :: OSI Approved :: MIT License"
 ]
 dependencies = [
+    "dagshub>=0.7.3",
     "dvc-gs>=3.0.1",
+    "fastapi>=0.115.0",
     "joblib>=1.6.0",
     "loguru>=0.7.3", # Loggings
     "matplotlib>=3.11.2", # Evaluation artifacts for train entry points
@@ -28,6 +30,7 @@ dependencies = [
     "scikit-learn>=1.9.1", # ML models
     "tqdm>=4.70.1", # Progress Bars
     "typer>=0.27.3", # CLI's
+    "uvicorn>=0.30.0",
 ]
 requires-python = "~=3.13.0"
 
@@ -57,4 +60,5 @@ dev = [
     "python-docx>=1.2.0",
     "bandit>=1.9.4",
     "pip-audit>=2.10.1",
+    "httpx>=0.27.0",
 ]

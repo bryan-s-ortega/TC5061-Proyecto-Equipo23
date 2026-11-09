@@ -1,0 +1,26 @@
+{
+  "dataframe_split": {
+    "columns": [
+      "departures_prev_30m",
+      "arrivals_prev_30m",
+      "departures_prev_2h",
+      "arrivals_prev_2h",
+      "hour",
+      "minute",
+      "day_of_week",
+      "capacity"
+    ],
+    "data": [
+      [
+        2.0,
+        1.0,
+        8.0,
+        6.0,
+        10,
+        30,
+        2,
+        15
+      ]
+    ]
+  }
+}
