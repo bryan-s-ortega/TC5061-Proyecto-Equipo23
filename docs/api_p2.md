@@ -1,75 +1,86 @@
-# API REST de P2: guía de despliegue
+# API REST de P2: despliegue y consumo
 
-**Estado: borrador para integración.** Esta guía se prepara sobre `main`, commit
-`707f961`. Están integrados el contrato Pydantic y el Containerfile inicial; falta
-la aplicación `mibici/api/main.py`. Los comandos siguientes se deben verificar
-cuando esté integrada la API. No se han construido ni ejecutado contenedores como
-parte de esta contribución y todavía no se publica una respuesta real de inferencia.
+## Propósito y estrategia
 
-## Propósito y estrategia de despliegue
+El servicio de MiBici estima la clase de presión neta de movimientos de una
+estación para el siguiente intervalo de 30 minutos. Se utiliza **inferencia en
+línea**: el consumidor envía las variables disponibles al comenzar un intervalo y
+recibe una predicción HTTP/JSON sin esperar un proceso por lotes. Este modo permite
+consultas individuales; `/predict/batch` permite agrupar varias entradas en una
+petición. No se afirma una latencia garantizada.
 
-La API de MiBici atenderá una petición `POST /predict` con las variables de una
-estación y devolverá su clase de presión neta de movimientos para el siguiente
-intervalo de 30 minutos. Se propone **inferencia en tiempo real**, porque el
-consumidor puede solicitar una predicción con las variables disponibles al
-comenzar cada intervalo y recibir una respuesta inmediata, sin esperar un proceso
-por lotes.
+La etiqueta es un indicador proxy de los flujos de viajes respecto a la capacidad;
+no mide directamente bicicletas o anclajes disponibles físicamente.
 
-El resultado es un indicador proxy calculado a partir de movimientos: no demuestra
-que una estación esté físicamente vacía o llena. La elección describe el modo de
-consumo propuesto; aún no hay mediciones de latencia del servicio.
+## Modelo empaquetado y Registry
 
-## Modelo y requisitos de integración
+La imagen incluye el artefacto de MLflow de `models/p2_champion/` y configura
+`MODEL_PATH=/app/models/p2_champion`. El [manifiesto](../models/p2_champion/manifest.json)
+conserva la procedencia declarada del paquete:
 
-La referencia de P2 registrada por el proyecto es
-`MiBici_Equipo23_P2_Presion_Proxy_Academica`. Para la integración se propone cargar
-el modelo desde MLflow al iniciar el servicio, usando el alias `champion`:
+| Dato | Valor |
+| --- | --- |
+| Registry | `https://dagshub.com/bryan-s-ortega/TC5061-Proyecto-Equipo23.mlflow` |
+| Nombre | `MiBici_Equipo23_P2_Presion_Proxy_Academica` |
+| Alias | `champion` |
+| Versión del paquete | `1` |
+| Corrida de origen | `55225195968642979a681bf751d9e2f8` |
 
-```text
-models:/MiBici_Equipo23_P2_Presion_Proxy_Academica@champion
+La ruta de despliegue elegida es **empaquetar en la imagen el modelo que el equipo
+extrajo del Registry**. En esta configuración la inferencia no necesita conectarse
+a un servidor MLflow externo al arrancar. Los metadatos anteriores identifican el
+paquete publicado; no equivalen a una nueva auditoría de su entrenamiento ni a una
+comprobación independiente de todas las corridas de selección anteriores.
+
+La aplicación también admite carga por URI con `MLFLOW_TRACKING_URI` y `MODEL_URI`,
+pero prioriza los artefactos locales existentes. Cambiar solo la URI no sustituye
+un paquete local que se carga correctamente. La prueba de esta entrega utiliza el
+paquete incluido en la imagen y no modifica el Registry ni el alias remoto.
+
+## Requisitos y construcción de la imagen
+
+Se requiere Docker con su motor iniciado, Git y acceso de red para descargar las
+imágenes base y dependencias. Ejecutar los comandos desde la raíz del repositorio.
+El archivo [Containerfile](../Containerfile) utiliza Python 3.13 y las versiones
+resueltas en `uv.lock`; `requirements-api.txt` dejó de utilizarse.
+
+```bash
+docker build --progress=plain -f Containerfile \
+  -t mibici-p2-api:actividad8-olbap009 .
 ```
 
-La ubicación del servidor se configura mediante `MLFLOW_TRACKING_URI`. El servidor
-y el almacenamiento de artefactos deben ser accesibles desde el contenedor y el
-alias debe existir en esa instancia. La respuesta debe identificar la versión
-efectivamente cargada; el nombre de alias por sí solo no identifica una versión
-inmutable. Si la integración elige empaquetar un modelo descargado del Registry,
-debe documentar esa opción y su versión antes de cerrar esta guía.
+Se copian `README.md` y `LICENSE` porque son metadatos requeridos por Flit al
+instalar el paquete definido en `pyproject.toml`.
 
-Antes de validar el servicio, confirmar:
+## Inicio y comprobación del servicio
 
-- La aplicación FastAPI exporta `app` desde el módulo que utiliza el Containerfile.
-- El endpoint conecta el esquema con el modelo y conserva el orden/nombres de las
-  ocho variables de entrenamiento.
-- El Containerfile y el entorno de inferencia usan las dependencias acordadas con
-  el `uv.lock` del proyecto. El Containerfile inicial usa Python 3.11 y
-  `requirements-api.txt`, mientras el proyecto declara Python 3.13; la integración
-  de dependencias aún está pendiente.
-- Se dispone de Podman y de acceso al servidor y los artefactos de MLflow. En
-  macOS o Windows, la máquina virtual de Podman debe estar iniciada.
+```bash
+docker run -d --rm --name mibici-p2-api-actividad8-olbap009 \
+  -p 127.0.0.1:18000:8000 \
+  mibici-p2-api:actividad8-olbap009
 
-## Contrato de entrada y salida
+docker ps --filter name=mibici-p2-api-actividad8-olbap009
+curl --fail-with-body http://127.0.0.1:18000/health
+curl --fail-with-body http://127.0.0.1:18000/model/info
+```
 
-El contrato de Miguel está en
-[`mibici/api/schemas.py`](../mibici/api/schemas.py), con su explicación en
-[`references/p2_api_contract.md`](../references/p2_api_contract.md).
+El puerto 8000 del contenedor se publica en el puerto **18000** de la máquina
+local. La interfaz web está en `http://127.0.0.1:18000/ui` y Swagger en
+`http://127.0.0.1:18000/docs`. El puerto alternativo evita depender de que el 8000
+esté libre en el anfitrión.
 
-| Campo de entrada | Restricción |
-| --- | --- |
-| `departures_prev_30m` | Entero mayor o igual a cero |
-| `arrivals_prev_30m` | Entero mayor o igual a cero |
-| `departures_prev_2h` | Entero mayor o igual a cero |
-| `arrivals_prev_2h` | Entero mayor o igual a cero |
-| `hour` | Entero de 0 a 23 |
-| `minute` | 0 o 30 |
-| `day_of_week` | Entero de 0 a 6; lunes = 0 |
-| `capacity` | Entero mayor que cero |
+Antes de interpretar una predicción, revisar `/model/info`: un `model_type` que
+incluya `In-Memory Fallback` indica el modelo sintético de demostración, no el
+artefacto empaquetado. Un HTTP 200 o un estado `healthy` por sí solos no distinguen
+ambos casos. En esta prueba se comprobó además que el hash del archivo cargado
+en el contenedor coincide con el paquete del repositorio.
 
-No se aceptan campos adicionales. Los conteos históricos deben calcularse con
-movimientos conocidos antes del instante de predicción.
+## Petición de prueba
 
-La petición compartida para la prueba está en
-[`examples/p2_prediction_request.json`](../examples/p2_prediction_request.json):
+El contrato original está en [schemas.py](../mibici/api/schemas.py) y se describe
+en [p2_api_contract.md](../references/p2_api_contract.md). Se usa el mismo JSON
+compartido por el equipo, disponible en
+[examples/p2_prediction_request.json](../examples/p2_prediction_request.json):
 
 ```json
 {
@@ -84,96 +95,65 @@ La petición compartida para la prueba está en
 }
 ```
 
-El esquema de salida exige:
-
-| Campo | Contenido |
-| --- | --- |
-| `prediction` | `sin_presion_neta_elevada`, `presion_sin_bicicletas` o `presion_sin_anclajes` |
-| `model_name` | Nombre del modelo utilizado |
-| `model_version` | Versión del modelo cargado, como cadena |
-
-**Respuesta de ejemplo pendiente:** se añadirá la respuesta obtenida del modelo
-real al ejecutar la petición en el contenedor. La clase no se puede deducir del
-contrato y no se sustituye por una predicción inventada.
-
-## Construcción y ejecución previstas con Podman
-
-Ejecutar desde la raíz del repositorio **después de integrar la API y resolver sus
-dependencias**. Estos son los comandos propuestos para la prueba local:
+Los conteos deben ser enteros no negativos; `hour` va de 0 a 23, `minute` admite
+0 o 30, `day_of_week` va de 0 a 6 y `capacity` debe ser positiva. No se admiten
+campos adicionales ni faltantes.
 
 ```bash
-podman build -f Containerfile -t mibici-p2-api:actividad8 .
-```
-
-En otra terminal, iniciar el contenedor. La siguiente URI es un ejemplo para un
-servidor del anfitrión en el puerto 5001; ajustarla a la instancia real accesible:
-
-```bash
-export MLFLOW_TRACKING_URI_CONTENEDOR="http://host.containers.internal:5001"
-
-podman run --rm --name mibici-p2-api \
-  -p 127.0.0.1:8000:8000 \
-  -e MLFLOW_TRACKING_URI="$MLFLOW_TRACKING_URI_CONTENEDOR" \
-  mibici-p2-api:actividad8
-```
-
-`MLFLOW_TRACKING_URI_CONTENEDOR` es una variable auxiliar del shell; dentro del
-contenedor se entrega como `MLFLOW_TRACKING_URI`. Podman proporciona normalmente
-el nombre `host.containers.internal` para llegar al anfitrión. Su resolución y la
-conectividad dependen de la red y, en macOS/Windows, de la máquina virtual. Un
-servidor que solo escucha en una interfaz inaccesible desde esa red no podrá
-utilizarse mediante esta URI. Confirmar el acceso antes de atribuir un fallo al
-modelo.
-
-El puerto de la API se publica únicamente en la interfaz local del anfitrión para
-esta demostración. La estrategia final de acceso al Registry debe quedar alineada
-con la implementación que integre el equipo.
-
-## Petición de prueba y evidencia pendiente
-
-Con el contenedor ejecutándose, comprobar que aparece activo y enviar el JSON:
-
-```bash
-podman ps --filter name=mibici-p2-api
-
 curl --fail-with-body -i \
-  -X POST "http://127.0.0.1:8000/predict" \
-  -H "Content-Type: application/json" \
+  -X POST http://127.0.0.1:18000/predict \
+  -H 'Content-Type: application/json' \
   --data-binary @examples/p2_prediction_request.json
 ```
 
-Comprobar un estado HTTP 200 y una respuesta que cumpla el esquema de salida,
-con el nombre y la versión reales. Una respuesta de error o un contenedor que
-termina inmediatamente no acreditan el funcionamiento del servicio.
+Respuesta real obtenida desde el contenedor el 8 de noviembre de 2026, con HTTP
+200:
 
-Para completar la entrega, guardar en `reports/evidence/api/`:
-
-1. La respuesta JSON real y el commit de código utilizado.
-2. Una captura legible que muestre el contenedor activo y la petición HTTP con su
-   respuesta. La captura debe corresponder a Podman, no a una API ejecutada solo
-   fuera del contenedor.
-3. El nombre de imagen, versiones de Python y dependencias de inferencia, modelo
-   y versión resuelta, y los comandos que efectivamente funcionaron.
-
-Después, añadir la respuesta y la captura a esta guía y verificar nuevamente los
-comandos contra el Containerfile final. Hasta entonces, esta sección permanece
-pendiente de validación.
-
-Para finalizar la demostración local:
-
-```bash
-podman stop mibici-p2-api
+```json
+{
+  "prediction": "sin_presion_neta_elevada",
+  "model_name": "MiBici_Equipo23_P2_Presion_Proxy_Academica",
+  "model_version": "champion"
+}
 ```
 
-## Contribución y continuidad
+La [salida HTTP completa](../reports/evidence/api/curl_predict.txt) conserva los
+encabezados y el cuerpo devueltos por Uvicorn.
 
-Esta documentación y el JSON reutilizable son la aportación inicial de
-Juan Pablo Islas Guzmán (A01797727 / `Olbap009`), preparados con apoyo de Codex.
-Se basan en el contrato aportado por Miguel, el contenedor inicial de Kevin y la
-integración de API anunciada por Bryan. La respuesta y las capturas se completarán
-cuando pueda verificarse el servicio integrado.
 
-## Referencias técnicas
+`model_version` devuelve actualmente el alias `champion`; la versión numérica `1`
+procede del manifiesto del paquete. No se presenta el alias como si fuera un
+identificador inmutable de versión.
 
-- [Model Registry de MLflow: carga de modelos y aliases](https://mlflow.org/docs/latest/model-registry).
-- [Podman: ejecución y configuración de red del contenedor](https://docs.podman.io/en/latest/markdown/podman-run.1.html).
+## Evidencia y alcance de la verificación
+
+Los comandos, resultados JSON, imagen, contenedor, versiones y hashes se conservan
+en [reports/evidence/api](../reports/evidence/api/). Se verificaron
+una petición válida (HTTP 200), una petición con capacidad cero (HTTP 422), salud,
+metadatos, predicción por lote e interfaz web (HTTP 200). También se ejecutaron
+las pruebas de contrato y endpoints en un segundo contenedor temporal: **28
+aprobadas, una advertencia**, con PyTest 9.2.0. No se repitió toda la suite de
+54 pruebas reportada por Bryan.
+
+![Contenedor Docker y respuesta HTTP real](../reports/evidence/api/docker_prediction.png)
+
+![Interfaz de la API respondiendo desde el contenedor](../reports/evidence/api/api_ui.png)
+
+La primera captura es un visor de las salidas reales de `docker ps` y `curl`,
+conservadas en archivos de texto; no simula una terminal. La segunda corresponde
+a la interfaz de la API servida por el contenedor en el puerto 18000.
+
+Para detener el contenedor al finalizar:
+
+```bash
+docker stop mibici-p2-api-actividad8-olbap009
+```
+
+## Contribución
+
+Miguel aportó el contrato y sus pruebas; Kevin el contenedor inicial; Bryan la
+API, el modelo empaquetado y la integración con `uv.lock`. Juan Pablo Islas Guzmán
+(A01797727 / `Olbap009`) preparó esta documentación y el ejemplo compartido, y
+completó la verificación y la evidencia de despliegue con apoyo de Codex. También
+se corrige la copia de metadatos del paquete en la imagen y se conservan archivos
+de las entregas anteriores, como exige la consigna.

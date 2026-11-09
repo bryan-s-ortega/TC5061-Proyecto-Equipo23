@@ -1,0 +1,82 @@
+{
+  "recorded_at": "2026-11-08T23:09:54-06:00",
+  "base_url": "http://127.0.0.1:18000",
+  "base_commit": "a3384b408df65676d00cb36dd93c667490b90363",
+  "containerfile_change": "COPY README.md LICENSE ./ before installing the project",
+  "checks": {
+    "health": 200,
+    "model_info": 200,
+    "predict": 200,
+    "invalid_capacity": 422,
+    "batch": 200,
+    "ui": 200
+  },
+  "model_type": "DecisionTreeClassifier (MLflow Extracted Artifact)",
+  "api_reported_model_version": "champion",
+  "package_version": "1",
+  "package_model_sha256": "79f72b41f34e5ff13fba3c5d9871d0aa90ba47f9107e27d075e7fc1458d68f35",
+  "containerfile_sha256": "61d807dc4844a5202e21d1d0131cc8b2b6a9625f2f5051672d3f972f11d1821a",
+  "uv_lock_sha256": "0f428ada0fd176c2508b7774a0691465355032ca0ef49e5dea852f0fb8bbec09",
+  "note": "HTTP requests were sent to the locally running Docker container; no remote registry write or model re-registration was performed.",
+  "api_tests": {
+    "passed": 28,
+    "warnings": 1,
+    "pytest_version": "9.2.0",
+    "scope": [
+      "tests/test_p2_api_endpoints.py",
+      "tests/test_p2_api_schemas.py"
+    ],
+    "log": "pytest_api.txt",
+    "command": "docker run --rm --mount type=bind,source=<repo>/tests,target=/app/tests,readonly --entrypoint uv mibici-p2-api:actividad8-olbap009 run --frozen --no-dev --with pytest==9.2.0 python -m pytest tests/test_p2_api_endpoints.py tests/test_p2_api_schemas.py -q -p no:cacheprovider"
+  },
+  "container": {
+    "id": "d0e3aa42c6a9f790b29a527159406b1f5c5fa240fca4dff0e4bb1c2dcf27349e",
+    "name": "/mibici-p2-api-actividad8-olbap009",
+    "image_id": "sha256:ff4596c34794d1c6a57c42cad34485be41b353184f5d479f34dba931ab76000c",
+    "image_tag": "mibici-p2-api:actividad8-olbap009",
+    "running": true,
+    "started_at": "2026-11-09T05:09:04.098379217Z",
+    "ports": {
+      "8000/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "18000"
+        }
+      ]
+    }
+  },
+  "runtime": {
+    "python": "3.13.18",
+    "model_sha256": "79f72b41f34e5ff13fba3c5d9871d0aa90ba47f9107e27d075e7fc1458d68f35",
+    "packages": {
+      "mlflow": "3.16.1",
+      "scikit-learn": "1.9.1",
+      "fastapi": "0.162.0",
+      "pydantic": "2.14.2",
+      "uvicorn": "0.54.0",
+      "pandas": "3.1.0",
+      "numpy": "2.5.4"
+    }
+  },
+  "scope": "API sources and model from upstream a3384b4, plus the Containerfile metadata copy fix; documentation and captures were completed after running the image.",
+  "artifact_sha256": {
+    "README.md": "2b49a55096d263f1b71ada763cf71f399cf4ac0a5fc8ee6342144e2af789a78d",
+    "api_ui.png": "22445bc4ab9678ac4b015a15e417585903ac961cea2857cd645d7458f9de1346",
+    "batch_response.json": "2ba37b94a092afe6bf9ec02db454f1c629c4b02a76b4f795c20f97258354435e",
+    "container.json": "a7a854904f1caafcde8429d8d0f542e13e0d8d8d583691ee7654d3c4ba903dc1",
+    "container_build.txt": "28a3fbe4e71e608285c174bff0cf5cdd338fafc1a4dbd80e90467c6707801470",
+    "container_logs.txt": "1659980c9676a8ee9173d98b09c04207630e87185cbea3a4de72379250138ea0",
+    "container_runtime.json": "41842106414d1e7472a6e04849d00d9764a1bc4b8bc0a5c0f206855789daf76e",
+    "curl_predict.txt": "1cbb514cf88b770f8cac48a300b03914f567c760286b453ae3dc2e7ff9805643",
+    "docker_prediction.png": "744bef82fe2bece3447180786272859a6dde2c4ad2821142bde40f069d3fff2b",
+    "docker_ps.txt": "1f878c06fc94a3ddc9e93df4f8c410dbf22a1c46d7d9cbe1048ce9c24656c820",
+    "evidence_viewer.html": "f05ebfb9d294210c790e991b8e350542efb84dd23c28f4b38ea7e746bff3db23",
+    "health.json": "7fcb155ec2ecf82e16ca563333f88c730a2883429324ed639ab4b375c188c331",
+    "invalid_request.json": "de6ea848963a14b469a35c2d6e1543f45c3460e897de47d38deab27df31276ff",
+    "invalid_response.json": "63bbe3e0e8c33c01198dc502ec552377646f609d3b997178a821ce30f4228c19",
+    "model_info.json": "d3987b0fee20d4c56a22f45d62ff50a7d32ab01d1ca1edfc4c8d23e3b4a3389c",
+    "p2_response.json": "71214e020d5001fdd646354933f81f1a8535314d25c824e9703dfa6dfd5af52c",
+    "predict_http.txt": "c36db8889c5f99d2228c870a300ce4731524af2c4aa49f8fcd8376f3c4aaa64c",
+    "pytest_api.txt": "aa7306d9ab9ea9c4c32aeef0abeab417f03dcdf288f8319d3601470d5943ee9c"
+  }
+}

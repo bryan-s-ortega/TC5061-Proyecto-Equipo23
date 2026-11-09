@@ -1,0 +1,1 @@
+{"python": "3.13.18", "model_sha256": "79f72b41f34e5ff13fba3c5d9871d0aa90ba47f9107e27d075e7fc1458d68f35", "packages": {"mlflow": "3.16.1", "scikit-learn": "1.9.1", "fastapi": "0.162.0", "pydantic": "2.14.2", "uvicorn": "0.54.0", "pandas": "3.1.0", "numpy": "2.5.4"}}

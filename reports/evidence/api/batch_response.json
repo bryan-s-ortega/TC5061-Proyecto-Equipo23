@@ -1,0 +1,14 @@
+{
+  "predictions": [
+    {
+      "prediction": "sin_presion_neta_elevada",
+      "model_name": "MiBici_Equipo23_P2_Presion_Proxy_Academica",
+      "model_version": "champion"
+    },
+    {
+      "prediction": "sin_presion_neta_elevada",
+      "model_name": "MiBici_Equipo23_P2_Presion_Proxy_Academica",
+      "model_version": "champion"
+    }
+  ]
+}
