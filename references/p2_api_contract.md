@@ -54,7 +54,7 @@ uv run python -m mibici.api.extract_model
 
 ## Contenedorización con `uv.lock`
 
-El contenedor se gestiona mediante [Containerfile](file:///Users/steve/Documents/MNA/TC5061-Proyecto-Equipo23/Containerfile) utilizando `uv` y `uv.lock` en lugar de archivos `requirements.txt` separados, garantizando builds deterministas y reproducibles.
+El contenedor se gestiona mediante [Containerfile](../Containerfile) utilizando `uv` y `uv.lock` en lugar de archivos `requirements.txt` separados, garantizando builds deterministas y reproducibles.
 
 ### Construcción de la Imagen
 

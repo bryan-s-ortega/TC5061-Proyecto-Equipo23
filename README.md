@@ -6,6 +6,20 @@
 
 Proyecto de MLOps con datos del sistema de bicicleta pública del Área Metropolitana de Guadalajara, MiBici.
 
+## API REST de P2: despliegue y evidencia
+
+La [guía del servicio P2](docs/api_p2.md) explica la estrategia de inferencia en
+línea, cómo construir y ejecutar el contenedor con Docker y cómo consultar
+`/health`, `/model/info` y `/predict`. El
+[JSON de ejemplo](examples/p2_prediction_request.json) coincide con el contrato
+del equipo. Los resultados y la captura de la prueba del contenedor se conservan
+en [`reports/evidence/api/`](reports/evidence/api/).
+
+El contenedor incorpora el artefacto de MLflow de `models/p2_champion/`. Su
+manifiesto identifica el Registry de DagsHub, el alias `champion`, la versión y la
+corrida de procedencia. La guía distingue esos metadatos de la respuesta de la
+API y del modo de demostración que puede activarse si falla la carga del modelo.
+
 ## Actividad 7: pruebas, validación de datos y seguridad
 
 La [guía de ejecución y evidencias](reports/evidence/actividad7/README.md) documenta

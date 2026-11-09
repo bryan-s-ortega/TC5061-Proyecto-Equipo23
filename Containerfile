@@ -21,6 +21,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 # Copiar el código del proyecto y el modelo empaquetado
 COPY mibici/ ./mibici/
 COPY models/ ./models/
+COPY README.md LICENSE ./
 
 # Instalar el paquete mibici en el entorno virtual de producción
 RUN uv sync --frozen --no-dev

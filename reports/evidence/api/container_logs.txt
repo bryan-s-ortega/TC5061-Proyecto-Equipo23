@@ -1,0 +1,17 @@
+2026-11-09 05:09:04.513 | INFO     | mibici.config:<module>:11 - PROJ_ROOT path is: /app
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+[32m2026-11-09 05:09:08.183[0m | [1mINFO    [0m | [36mmibici.api.main[0m:[36mlifespan[0m:[36m27[0m - [1mIniciando servicio de API FastAPI para MiBici P2...[0m
+[32m2026-11-09 05:09:08.185[0m | [1mINFO    [0m | [36mmibici.api.model[0m:[36mload_model[0m:[36m56[0m - [1mModelo P2 cargado desde paquete MLflow local: /app/models/p2_champion[0m
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     172.17.0.1:56858 - "GET /health HTTP/1.1" 200 OK
+INFO:     172.17.0.1:56872 - "GET /model/info HTTP/1.1" 200 OK
+INFO:     172.17.0.1:56880 - "POST /predict HTTP/1.1" 200 OK
+INFO:     172.17.0.1:56886 - "POST /predict HTTP/1.1" 422 Unprocessable Content
+INFO:     172.17.0.1:56898 - "POST /predict/batch HTTP/1.1" 200 OK
+INFO:     172.17.0.1:56914 - "GET /ui HTTP/1.1" 200 OK
+INFO:     172.17.0.1:58388 - "POST /predict HTTP/1.1" 200 OK
+INFO:     172.17.0.1:58856 - "GET /ui HTTP/1.1" 200 OK
+INFO:     172.17.0.1:58856 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     172.17.0.1:64498 - "POST /predict HTTP/1.1" 200 OK

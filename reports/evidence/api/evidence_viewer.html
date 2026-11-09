@@ -1,0 +1,11 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>MiBici P2: evidencia de Docker y HTTP</title><style>body{font:16px/1.4 system-ui,sans-serif;color:#17283a;max-width:1130px;margin:22px auto}h1{font-size:27px;margin:8px 0}h2{font-size:18px;margin:16px 0 6px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f6fa;padding:12px;border:1px solid #dce3ec;font:13px/1.45 ui-monospace,monospace}.meta{color:#526174;font-size:13px}.note{padding:10px 14px;border-left:4px solid #233d99;background:#eef3f9}.badge{font-weight:700;color:#17673a}a{color:#233d99}</style><body><p class="meta">TC5061 · Equipo 23 · Verificación de despliegue · 2026-11-08T23:09:54-06:00</p><h1>API REST de P2 ejecutándose en Docker</h1><p class="note">Predicción enviada a <b>http://127.0.0.1:18000/predict</b>. El puerto corresponde al contenedor que aparece en la salida real de Docker.</p><h2>Contenedor activo · salida de docker ps</h2><pre>CONTAINER ID   IMAGE                               STATUS              PORTS                       NAMES
+d0e3aa42c6a9   mibici-p2-api:actividad8-olbap009   Up About a minute   127.0.0.1:18000-&gt;8000/tcp   mibici-p2-api-actividad8-olbap009</pre><h2>Petición y respuesta HTTP</h2><pre>curl --fail-with-body -i -X POST http://127.0.0.1:18000/predict \
+  -H 'Content-Type: application/json' \
+  --data-binary @examples/p2_prediction_request.json</pre><pre>HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  &quot;prediction&quot;: &quot;sin_presion_neta_elevada&quot;,
+  &quot;model_name&quot;: &quot;MiBici_Equipo23_P2_Presion_Proxy_Academica&quot;,
+  &quot;model_version&quot;: &quot;champion&quot;
+}</pre><p class="badge">/health: 200 · /model/info: 200 · /predict/batch: 200 · entrada inválida: 422</p><p>Modelo cargado: <b>DecisionTreeClassifier (MLflow Extracted Artifact)</b>. El SHA-256 del artefacto coincide dentro y fuera del contenedor.</p><p class="meta">Captura de un visor de salidas reales, sin simular una terminal. <a href="curl_predict.txt">Salida HTTP completa</a> · <a href="container.json">Identidad del contenedor</a> · <a href="http_verification.json">Registro de verificación</a></p></body></html>

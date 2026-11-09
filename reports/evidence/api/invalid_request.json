@@ -1,0 +1,10 @@
+{
+  "departures_prev_30m": 2,
+  "arrivals_prev_30m": 1,
+  "departures_prev_2h": 8,
+  "arrivals_prev_2h": 6,
+  "hour": 10,
+  "minute": 30,
+  "day_of_week": 2,
+  "capacity": 0
+}

@@ -1,0 +1,16 @@
+{
+  "id": "d0e3aa42c6a9f790b29a527159406b1f5c5fa240fca4dff0e4bb1c2dcf27349e",
+  "name": "/mibici-p2-api-actividad8-olbap009",
+  "image_id": "sha256:ff4596c34794d1c6a57c42cad34485be41b353184f5d479f34dba931ab76000c",
+  "image_tag": "mibici-p2-api:actividad8-olbap009",
+  "running": true,
+  "started_at": "2026-11-09T05:09:04.098379217Z",
+  "ports": {
+    "8000/tcp": [
+      {
+        "HostIp": "127.0.0.1",
+        "HostPort": "18000"
+      }
+    ]
+  }
+}
